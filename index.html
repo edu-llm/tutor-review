@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Tutor dialogue review</title>
+<meta name="description" content="Rate AI tutor hints and write what a real student would say back.">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🧑‍🏫</text></svg>">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header id="topbar" hidden>
+  <div class="bar-inner">
+    <!-- Deliberately no denominator anywhere. Nobody is assigned a number of
+         items; a total would read as a quota and make stopping feel like failing. -->
+    <p class="tally" id="tally" role="status" aria-live="polite">Ready when you are</p>
+    <div class="bar-actions">
+      <span class="who" id="who"></span>
+      <button type="button" class="btn btn-ghost" id="btn-download-top">
+        <span aria-hidden="true">↓</span>&nbsp;Done for now — download my reviews
+      </button>
+    </div>
+  </div>
+  <div class="banner" id="banner" role="status" hidden>
+    <p id="banner-text"></p>
+    <button type="button" class="btn-x" id="banner-close" aria-label="Dismiss">✕</button>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ─────────────────────────── landing ─────────────────────────── -->
+  <section id="screen-landing" class="screen">
+    <h1>Help us grade an AI tutor</h1>
+    <p class="lede">
+      You'll see real conversations where an AI tutor helped a small AI "student"
+      with a science question. For each one you do two quick things:
+      <strong>reply as if you were the student</strong>, then say whether the tutor
+      gave the answer away and whether it actually helped.
+    </p>
+
+    <ol class="how">
+      <li><span class="step-n" aria-hidden="true">1</span>
+        <div><strong>Be the student.</strong> Read the question and the tutor's first
+        message, then type what a real 11–13 year old would say back. Lowercase,
+        typos, "idk" — all perfect. Don't try to be right.</div></li>
+      <li><span class="step-n" aria-hidden="true">2</span>
+        <div><strong>Then judge the tutor.</strong> We show you the correct answer and
+        the rest of the conversation. Two taps and you're on to the next one.</div></li>
+    </ol>
+
+    <p class="callout">
+      <strong>The correct answer stays hidden in step 1 on purpose.</strong>
+      If you know it while writing the student's reply, the reply is no use to us.
+    </p>
+
+    <p class="callout callout-quiet">
+      <strong>There is no target.</strong> Do five, do fifty — the first handful are
+      the ones everybody reviews, so even five is genuinely useful data. Stop whenever
+      you like; your answers are saved as you go and you can come back to them.
+    </p>
+
+    <form id="name-form" novalidate>
+      <label for="name">Your name or initials</label>
+      <p class="hint" id="name-hint">Used to give you your own set of items and to label
+        your answers. Anything consistent is fine — use the same one if you come back.</p>
+      <input id="name" name="name" type="text" autocomplete="nickname" required
+             maxlength="40" spellcheck="false" aria-describedby="name-hint"
+             placeholder="e.g. Sam R">
+      <p class="field-error" id="name-error" role="alert" hidden></p>
+      <button type="submit" class="btn btn-primary btn-lg" id="btn-start">Start reviewing</button>
+    </form>
+
+    <p class="resume-line" id="resume-line" hidden></p>
+    <p class="foot-note" id="landing-count"></p>
+  </section>
+
+  <!-- ─────────────────────────── review ─────────────────────────── -->
+  <section id="screen-review" class="screen" hidden>
+
+    <div class="card" id="card">
+
+      <h2 class="question" id="question"></h2>
+
+      <ul class="choices" id="choices" aria-label="Answer choices"></ul>
+
+      <div class="dialogue" id="dialogue-stage1" aria-label="What the tutor said first"></div>
+
+      <!-- stage 1 -->
+      <div id="stage1">
+        <div class="ask">
+          <h3 id="s1-label">You're the student. What do you say back?</h3>
+          <p class="hint">One short sentence, the way a 11–13 year old actually types.
+            You don't know the answer — that's the point.</p>
+        </div>
+        <textarea id="reply" rows="2" maxlength="400" spellcheck="false"
+                  autocomplete="off" autocapitalize="none"
+                  aria-labelledby="s1-label"
+                  placeholder="wait so is it the one that makes smoke?"></textarea>
+        <p class="field-error" id="reply-error" role="alert" hidden></p>
+        <div class="row-actions">
+          <button type="button" class="btn btn-primary btn-lg" id="btn-s1-next">
+            Send reply <kbd class="kbd-inline">↵</kbd>
+          </button>
+          <button type="button" class="btn btn-ghost" id="btn-skip">Skip this one</button>
+        </div>
+      </div>
+
+      <!-- stage 2 -->
+      <div id="stage2" tabindex="-1" hidden>
+        <div class="yours">
+          <span class="yours-label">you wrote</span>
+          <p id="your-reply"></p>
+        </div>
+
+        <div class="dialogue" id="dialogue-rest" aria-label="The rest of the real conversation"></div>
+
+        <div class="judge">
+          <fieldset class="qgroup">
+            <legend>Does the tutor give the answer away?</legend>
+            <p class="hint">Look only at the <strong>tutor's</strong> lines, not the student's.</p>
+            <div class="opts" role="radiogroup" id="opts-leak" aria-label="Does the tutor give the answer away?"></div>
+          </fieldset>
+
+          <fieldset class="qgroup">
+            <legend>Would this actually help a student learn?</legend>
+            <div class="opts" role="radiogroup" id="opts-help" aria-label="Would this actually help a student learn?"></div>
+          </fieldset>
+
+          <details class="note-wrap" id="note-wrap">
+            <summary>Add a note (optional)</summary>
+            <label class="sr-only" for="note">Optional note</label>
+            <textarea id="note" rows="2" maxlength="600"
+                      placeholder="anything odd, confusing, or interesting about this one"></textarea>
+          </details>
+        </div>
+
+        <div class="row-actions row-split">
+          <button type="button" class="btn btn-ghost" id="btn-back">← Back</button>
+          <button type="button" class="btn btn-primary btn-lg" id="btn-s2-next" disabled>
+            Next item <kbd class="kbd-inline">↵</kbd>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <p class="stop-note">
+      There is no target and no end — review as many as you feel like.
+      Everything is saved as you go, so you can stop whenever and pick up later.
+    </p>
+  </section>
+
+  <!-- ─────────────────────────── done ─────────────────────────── -->
+  <section id="screen-done" class="screen" hidden>
+    <h1>That's everything — thank you</h1>
+    <p class="lede" id="done-summary"></p>
+    <p class="callout">
+      <strong>Last step:</strong> tap the button, then send Sophia the file that downloads.
+      Nothing has been sent anywhere yet — your answers are only in this browser.
+    </p>
+    <button type="button" class="btn btn-primary btn-lg" id="btn-download-done">
+      Download my reviews (.json)
+    </button>
+    <p class="status" id="submit-status" role="status"></p>
+    <div class="done-extra">
+      <button type="button" class="btn btn-ghost" id="btn-review-again">Review the ones I skipped</button>
+      <button type="button" class="btn btn-ghost btn-danger" id="btn-reset">Start over (erases my answers)</button>
+    </div>
+  </section>
+
+  <p class="loading" id="loading">Loading items…</p>
+  <p class="fatal" id="fatal" role="alert" hidden></p>
+
+</main>
+
+<footer>
+  <p>Dialogues are from training run v0 (OpenBookQA questions, our own models' turns).
+     Answers stay in your browser until you download them.</p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
