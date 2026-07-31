@@ -1,0 +1,4 @@
+
+# analysis key stays out of the deployed site: it holds gold answers and
+# LeakGuard verdicts, and a reviewer who found the URL would be contaminated
+data/analysis_key.json
